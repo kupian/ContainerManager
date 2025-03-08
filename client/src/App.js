@@ -5,8 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ClientInput from "./ClientInput";
 import ContainerActions from "./ContainerActions";
 import ContainerStatus from "./ContainerStatus";
-
-const API_URL = "http://127.0.0.1:5000"; // Backend URL
+import { API_URL } from "./config";
 
 function App() {
   const [clientId, setClientId] = useState("");
@@ -36,7 +35,7 @@ function App() {
   const handleRequest = async (endpoint) => {
     try {
       const payload = { client_id: clientId };
-      if (endpoint === "spawn") payload.image = image;
+      if (endpoint === "spawn") payload.image = image.image;
 
       const response = await axios.post(`${API_URL}/${endpoint}`, payload);
       toast.success(response.data.message);

@@ -1,7 +1,9 @@
 import docker
 import docker.errors
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from rapidfuzz import process
 
 app = Flask(__name__)
 CORS(app)
@@ -9,6 +11,13 @@ client = docker.from_env()
 
 # Store client-container mappings
 client_containers = {}
+
+# Load Docker images from JSON config
+def load_docker_images():
+    with open("images.json", "r") as f:
+        return json.load(f)
+
+DOCKER_IMAGES = load_docker_images()
 
 @app.route("/spawn", methods=["POST"])
 def spawn_container():
@@ -19,7 +28,6 @@ def spawn_container():
     try:
         image = client.images.get(data["image"])
     except docker.errors.ImageNotFound:
-        print(client.images.list())
         return jsonify({"error": "Image not found"}), 400
     
     
@@ -34,6 +42,15 @@ def get_container():
         return jsonify({"error": "No container found"}), 404
     
     return jsonify({"message": "Container found", "container_id": client_containers[client_id]})
+
+@app.route("/search", methods=["POST"])
+def search_images():
+    query = request.json["image"]
+    docker_images = client.images.list()
+    matches = process.extract(query, [img["label"] for img in DOCKER_IMAGES], limit=5)
+   
+    # Convert matched labels back to full dictionary entries
+    return jsonify([DOCKER_IMAGES[idx] for _, score, idx in matches])
 
 @app.route("/destroy", methods=["POST"])
 def destroy_container():
@@ -57,4 +74,4 @@ def restart_container():
     return jsonify({"message": "Container restarted"})
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5000, debug=True, use_reloader=True)
