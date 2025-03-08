@@ -62,6 +62,7 @@ function App() {
         {/* Container Status */}
         <ContainerStatus containerId={containerId} />
       </div>
+      Please reach out to Alexander C regarding any issues using this client.
     </div>
   );
 }
