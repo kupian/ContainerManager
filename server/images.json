@@ -1,6 +1,6 @@
 [
   {
     "label": "System Breach",
-    "image": "web-server-attack-server:latest"
+    "image": "system-breach:latest"
   }
 ]
