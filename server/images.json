@@ -4,7 +4,7 @@
     "image": "system-breach:latest"
   },
   {
-    "label": "VSFTPD 2.3.4 Backdoor Challenge",
+    "label": "File Backup",
     "image": "vsftpd:latest"
   }
 ]
