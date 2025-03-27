@@ -5,6 +5,6 @@
   },
   {
     "label": "VSFTPD 2.3.4 Backdoor Challenge",
-    "image": "vulnerable-vsftpd:2.3.4"
+    "image": "vsftpd:latest"
   }
 ]
