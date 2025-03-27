@@ -44,7 +44,7 @@ function ClientInput({ clientId, setClientId, image, setImage }) {
          isSearchable
          loadingMessage={() => "Searching..."}
          noOptionsMessage={({inputValue}) => 
-          inputValue ? `No images found for ${inputValue}` : "Start typing to search..."
+          inputValue ? `No images found for ${inputValue}` : "Search by challenge name..."
         }
          onChange={(option) => setImage(option)}
          placeholder="Select an image..."
