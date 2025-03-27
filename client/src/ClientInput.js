@@ -1,11 +1,10 @@
 import React from "react";
 import AsyncSelect from 'react-select/async';
-import { API_URL } from "./config";
 
 const loadOptions = async (inputValue) => {
   try {
     const response = await fetch(
-      `${API_URL}/search`, {
+      `/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

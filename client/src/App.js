@@ -5,26 +5,31 @@ import "react-toastify/dist/ReactToastify.css";
 import ClientInput from "./ClientInput";
 import ContainerActions from "./ContainerActions";
 import ContainerStatus from "./ContainerStatus";
-import { API_URL } from "./config";
 
 function App() {
   const [clientId, setClientId] = useState("");
   const [containerId, setContainerId] = useState("");
+  const [ports, setPorts] = useState({});
   const [image, setImage] = useState("ubuntu");
 
   // Fetch existing container when Client ID is updated
   useEffect(() => {
     if (!clientId.trim()) {
       setContainerId("");
+      setPorts({});
       return;
     }
 
     const fetchContainer = async () => {
       try {
-        const response = await axios.post(`${API_URL}/get`, { client_id: clientId });
+        const response = await axios.post("/get", { client_id: clientId });
+        console.log("Container data:", response.data);
         setContainerId(response.data.container_id);
+        setPorts(response.data.ports || {});
       } catch (error) {
-        setContainerId(""); // No container found
+        console.error("Error fetching container:", error);
+        setContainerId("");
+        setPorts({});
       }
     };
 
@@ -37,12 +42,24 @@ function App() {
       const payload = { client_id: clientId };
       if (endpoint === "spawn") payload.image = image.image;
 
-      const response = await axios.post(`${API_URL}/${endpoint}`, payload);
+      console.log(`Sending ${endpoint} request:`, payload);
+      
+      const response = await axios.post(`/${endpoint}`, payload);
+      console.log(`${endpoint} response:`, response.data);
+      
       toast.success(response.data.message);
 
-      if (endpoint === "spawn") setContainerId(response.data.container_id);
-      if (endpoint === "destroy") setContainerId("");
+      if (endpoint === "spawn") {
+        setContainerId(response.data.container_id);
+        setPorts(response.data.ports || {});
+      } else if (endpoint === "restart") {
+        setPorts(response.data.ports || {});
+      } else if (endpoint === "destroy") {
+        setContainerId("");
+        setPorts({});
+      }
     } catch (error) {
+      console.error(`Error in ${endpoint}:`, error);
       toast.error(error.response?.data?.error || "Request failed");
     }
   };
@@ -60,7 +77,7 @@ function App() {
         <ContainerActions clientId={clientId} containerId={containerId} handleRequest={handleRequest} />
 
         {/* Container Status */}
-        <ContainerStatus containerId={containerId} />
+        <ContainerStatus containerId={containerId} ports={ports} />
       </div>
       Please reach out to Alexander C regarding any issues using this client.
     </div>
