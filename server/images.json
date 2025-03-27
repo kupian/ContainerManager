@@ -2,5 +2,9 @@
   {
     "label": "System Breach",
     "image": "system-breach:latest"
+  },
+  {
+    "label": "VSFTPD 2.3.4 Backdoor Challenge",
+    "image": "vulnerable-vsftpd:2.3.4"
   }
 ]
