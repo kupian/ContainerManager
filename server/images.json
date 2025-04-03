@@ -6,5 +6,13 @@
   {
     "label": "File Backup",
     "image": "vsftpd:latest"
+  },
+  {
+    "label": "Silent Oribt",
+    "image": "silent-orbit:latest"
+  },
+  {
+    "label": "Orion Terminal",
+    "image": "samba:latest"
   }
 ]
