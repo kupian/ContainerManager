@@ -14,5 +14,12 @@
   {
     "label": "Orion Terminal",
     "image": "samba:latest"
+  },
+  {
+    "label": "LLM",
+    "image": "qwen25_05b",
+    "volumes": {
+      "~/.cache": "/home/python/.cache"
+    }
   }
 ]

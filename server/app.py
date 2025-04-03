@@ -1,6 +1,7 @@
 import docker
 import docker.errors
 import json
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from rapidfuzz import process
@@ -43,6 +44,13 @@ def get_container_ports(container):
     
     return port_mappings
 
+def get_image_config(image_name):
+    """Get the configuration for an image from the images.json file"""
+    for img in DOCKER_IMAGES:
+        if img["image"] == image_name:
+            return img
+    return None
+
 @app.route("/spawn", methods=["POST"])
 def spawn_container():
     data = request.json
@@ -51,30 +59,43 @@ def spawn_container():
         return jsonify({"error": "Client already has a container"}), 400
     
     try:
+        # Get image configuration from JSON
         image_name = data["image"]
-        image = client.images.get(image_name)
-    except docker.errors.ImageNotFound:
-        return jsonify({"error": f"Image {image_name} not found"}), 400
-    
-    # Get exposed ports from image configuration
-    image_config = client.api.inspect_image(image_name)
-    port_bindings = {}
-    
-    # Create port bindings for all exposed ports
-    if image_config.get('Config', {}).get('ExposedPorts'):
-        for port_proto in image_config['Config']['ExposedPorts'].keys():
-            # Set to None to let Docker assign a random host port
-            port_bindings[port_proto] = None
-    
-    # If no ports are exposed in the image, expose some common ports
-    if not port_bindings:
-        port_bindings = {
-            '3000/tcp': None,
-            '8080/tcp': None,
-            '80/tcp': None
-        }
-    
-    try:
+        image_config_json = get_image_config(image_name)
+        
+        # Try to get the image
+        try:
+            image = client.images.get(image_name)
+        except docker.errors.ImageNotFound:
+            return jsonify({"error": f"Image {image_name} not found"}), 400
+        
+        # Get exposed ports from image configuration
+        image_inspect = client.api.inspect_image(image_name)
+        port_bindings = {}
+        
+        # Create port bindings for all exposed ports
+        if image_inspect.get('Config', {}).get('ExposedPorts'):
+            for port_proto in image_inspect['Config']['ExposedPorts'].keys():
+                # Set to None to let Docker assign a random host port
+                port_bindings[port_proto] = None
+        
+        # If no ports are exposed in the image, expose some common ports
+        if not port_bindings:
+            port_bindings = {
+                '3000/tcp': None,
+                '8080/tcp': None,
+                '80/tcp': None
+            }
+        
+        # Handle volume mounts if specified in the image JSON config
+        volumes = {}
+        if image_config_json and "volumes" in image_config_json:
+            for host_path, container_path in image_config_json["volumes"].items():
+                # Expand ~ to user's home directory
+                if host_path.startswith("~"):
+                    host_path = os.path.expanduser(host_path)
+                volumes[host_path] = {"bind": container_path, "mode": "rw"}
+        
         # Run container with bridge networking and publish ports to random host ports
         container = client.containers.run(
             image, 
@@ -84,7 +105,9 @@ def spawn_container():
             # Add host.docker.internal mapping for easy access to host
             extra_hosts={"host.docker.internal": "host-gateway"},
             # Pass container ID as a label for easier management
-            labels={"client_id": client_id}
+            labels={"client_id": client_id},
+            # Add volume mounts if specified
+            volumes=volumes if volumes else None
         )
         
         # Get container details after it's running
