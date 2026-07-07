@@ -13,5 +13,5 @@ MarkupSafe==3.0.2
 python-dotenv==1.1.0
 RapidFuzz==3.12.2
 requests==2.32.3
-urllib3==2.3.0
+urllib3==2.7.0
 Werkzeug==3.1.3
